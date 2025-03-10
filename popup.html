@@ -6,77 +6,111 @@
   <style>
     body {
       width: 300px;
-      padding: 10px;
-      font-family: Arial, sans-serif;
+      padding: 0;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      color: #2c3e50;
     }
     .container {
       display: flex;
       flex-direction: column;
-      gap: 10px;
     }
-    button {
-      padding: 8px;
-      background-color: #4285f4;
+    .header {
+      background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
       color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
+      padding: 15px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
     }
-    button:hover {
-      background-color: #3367d6;
+    .header h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .content {
+      padding: 15px;
     }
     .stats {
-      margin-top: 15px;
-      padding: 10px;
-      background-color: #f5f5f5;
-      border-radius: 4px;
+      background-color: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      margin-bottom: 15px;
+    }
+    .stats h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 16px;
+      color: #4e4376;
+      border-bottom: 1px solid #f0f0f0;
+      padding-bottom: 8px;
     }
     .stat-item {
-      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 14px;
+      align-items: center;
     }
-    .target-site {
-      color: green;
-      font-weight: bold;
+    .stat-value {
+      background: rgba(75, 85, 99, 0.1);
+      padding: 3px 10px;
+      border-radius: 15px;
+      font-weight: 600;
+      min-width: 30px;
+      text-align: center;
     }
-    .other-site {
-      color: gray;
-      font-style: italic;
+    .note {
+      background-color: rgba(79, 114, 240, 0.1);
+      border-left: 4px solid #4f72f0;
+      padding: 10px 15px;
+      border-radius: 4px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #2c3e50;
     }
-    .hidden {
-      display: none;
-    }
-    .status-message {
-      color: #f44336;
+    .total-row {
+      border-top: 1px solid #f0f0f0;
+      padding-top: 10px;
       margin-top: 10px;
+      font-weight: 600;
+    }
+    .total-row .stat-value {
+      background: rgba(75, 85, 99, 0.2);
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Link Collector</h2>
-    <div id="statusMessage" class="status-message"></div>
-    
-    <!-- Target site controls -->
-    <div id="targetSiteControls">
-      <button id="collectLinks">Collect Links</button>
-      <button id="startNavigation">Start Auto-Navigation</button>
-      <button id="stopNavigation">Stop Auto-Navigation</button>
-      <button id="clearLinks">Clear All Links</button>
-      <button id="downloadLinks">Download Links</button>
-      
-      <div class="stats">
-        <h3>Statistics</h3>
-        <div class="stat-item">Media Links: <span id="mediaLinks">0</span></div>
-        <div class="stat-item">File Links: <span id="fileLinks">0</span></div>
-        <div class="stat-item">RedGifs Links: <span id="redgifsLinks">0</span></div>
-        <div class="stat-item">Total Links: <span id="totalLinks">0</span></div>
-      </div>
+    <div class="header">
+      <h2>Link Collector</h2>
     </div>
     
-    <!-- Other site message -->
-    <div id="otherSiteMessage" class="hidden">
-      <p>This extension only works on example.com</p>
-      <p>Please navigate to example.com to use this extension.</p>
+    <div class="content">
+      <div class="stats">
+        <h3>Collected Links</h3>
+        <div class="stat-item">
+          <span>Media Links</span>
+          <span class="stat-value" id="mediaLinks">0</span>
+        </div>
+        <div class="stat-item">
+          <span>File Links</span>
+          <span class="stat-value" id="fileLinks">0</span>
+        </div>
+        <div class="stat-item">
+          <span>RedGifs Links</span>
+          <span class="stat-value" id="redgifsLinks">0</span>
+        </div>
+        <div class="stat-item total-row">
+          <span>Total Links</span>
+          <span class="stat-value" id="totalLinks">0</span>
+        </div>
+      </div>
+      
+      <div class="note">
+        Use the toolbar at the top of the page on simpcity.su for collecting and managing links.
+      </div>
     </div>
   </div>
   
