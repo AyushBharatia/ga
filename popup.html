@@ -1,0 +1,85 @@
+<!-- popup.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Link Collector</title>
+  <style>
+    body {
+      width: 300px;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    button {
+      padding: 8px;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #3367d6;
+    }
+    .stats {
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #f5f5f5;
+      border-radius: 4px;
+    }
+    .stat-item {
+      margin-bottom: 5px;
+    }
+    .target-site {
+      color: green;
+      font-weight: bold;
+    }
+    .other-site {
+      color: gray;
+      font-style: italic;
+    }
+    .hidden {
+      display: none;
+    }
+    .status-message {
+      color: #f44336;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Link Collector</h2>
+    <div id="statusMessage" class="status-message"></div>
+    
+    <!-- Target site controls -->
+    <div id="targetSiteControls">
+      <button id="collectLinks">Collect Links</button>
+      <button id="startNavigation">Start Auto-Navigation</button>
+      <button id="stopNavigation">Stop Auto-Navigation</button>
+      <button id="clearLinks">Clear All Links</button>
+      <button id="downloadLinks">Download Links</button>
+      
+      <div class="stats">
+        <h3>Statistics</h3>
+        <div class="stat-item">Media Links: <span id="mediaLinks">0</span></div>
+        <div class="stat-item">File Links: <span id="fileLinks">0</span></div>
+        <div class="stat-item">RedGifs Links: <span id="redgifsLinks">0</span></div>
+        <div class="stat-item">Total Links: <span id="totalLinks">0</span></div>
+      </div>
+    </div>
+    
+    <!-- Other site message -->
+    <div id="otherSiteMessage" class="hidden">
+      <p>This extension only works on example.com</p>
+      <p>Please navigate to example.com to use this extension.</p>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+    "manifest_version": 3,
+    "name": "Link Collector",
+    "version": "1.0",
+    "description": "Collects links from a specific website",
+    "permissions": [
+      "storage",
+      "activeTab",
+      "scripting",
+      "downloads"
+    ],
+    "host_permissions": [
+      "*://simpcity.su/*" 
+    ],
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": {
+        "48": "icon48.png"
+      }
+    },
+    "background": {
+      "service_worker": "background.js"
+    },
+    "content_scripts": [
+      {
+        "matches": ["*://simpcity.su/*"],  
+        "js": ["content.js"]
+      }
+    ],
+    "icons": {
+      "48": "icon48.png"
+    }
+  }
