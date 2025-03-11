@@ -4,60 +4,101 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Saint Links Player</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body {
+    :root {
+      --primary-color: #7764E4;
+      --primary-light: #9D8DF2;
+      --primary-dark: #5743C8;
+      --accent-color: #FF6B6B;
+      --text-light: #f8f9fa;
+      --text-dark: #212529;
+      --bg-dark: #121212;
+      --bg-card: #1E1E1E;
+      --bg-gradient: linear-gradient(135deg, #4568DC 0%, #B06AB3 100%);
+      --shadow-sm: 0 2px 10px rgba(0,0,0,0.15);
+      --shadow-md: 0 4px 20px rgba(0,0,0,0.2);
+      --shadow-lg: 0 10px 30px rgba(0,0,0,0.25);
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #121212;
-      color: #f1f1f1;
+    }
+    
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-light);
       display: flex;
       flex-direction: column;
       height: 100vh;
       overflow: hidden;
+      line-height: 1.6;
     }
     
     .header {
-      background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
-      padding: 15px 20px;
+      background: var(--bg-gradient);
+      padding: 16px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      box-shadow: var(--shadow-md);
       z-index: 10;
+      position: relative;
     }
     
     .title {
-      font-size: 18px;
-      font-weight: 600;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
       margin: 0;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+    }
+    
+    .title:before {
+      content: '\f144';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      margin-right: 10px;
+      font-size: 22px;
+      color: var(--accent-color);
     }
     
     .controls {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       flex-wrap: wrap;
     }
     
     button {
-      padding: 8px 15px;
+      padding: 10px 18px;
       background-color: rgba(255, 255, 255, 0.15);
       color: white;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 5px;
+      border: none;
+      border-radius: var(--radius-sm);
       cursor: pointer;
       font-weight: 500;
       font-size: 14px;
-      transition: all 0.2s ease-in-out;
+      transition: var(--transition);
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 8px;
+      backdrop-filter: blur(4px);
     }
     
     button:hover {
       background-color: rgba(255, 255, 255, 0.25);
       transform: translateY(-2px);
-      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      box-shadow: var(--shadow-sm);
     }
     
     button:active {
@@ -71,24 +112,6 @@
       box-shadow: none;
     }
     
-    #next-btn {
-      background-color: rgba(33, 150, 243, 0.2);
-      border-color: rgba(33, 150, 243, 0.4);
-    }
-    
-    #next-btn:hover {
-      background-color: rgba(33, 150, 243, 0.3);
-    }
-    
-    #prev-btn {
-      background-color: rgba(156, 39, 176, 0.2);
-      border-color: rgba(156, 39, 176, 0.4);
-    }
-    
-    #prev-btn:hover {
-      background-color: rgba(156, 39, 176, 0.3);
-    }
-    
     .content {
       flex: 1;
       display: flex;
@@ -96,6 +119,7 @@
       align-items: center;
       overflow: hidden;
       position: relative;
+      background-color: #0a0a0a;
     }
     
     .player-container {
@@ -104,6 +128,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      position: relative;
     }
     
     iframe {
@@ -114,29 +139,33 @@
     
     .info-panel {
       position: absolute;
-      bottom: 20px;
-      left: 20px;
-      background-color: rgba(0, 0, 0, 0.7);
-      padding: 10px 15px;
-      border-radius: 5px;
+      bottom: 24px;
+      left: 24px;
+      background-color: rgba(15, 15, 15, 0.85);
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
       font-size: 14px;
       display: flex;
-      gap: 10px;
-      opacity: 0.7;
-      transition: opacity 0.3s;
+      gap: 12px;
+      opacity: 0.8;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(8px);
     }
     
     .info-panel:hover {
       opacity: 1;
+      transform: translateY(-3px);
     }
     
     .progress {
-      margin-top: 5px;
-      background-color: rgba(255, 255, 255, 0.2);
+      margin-top: 8px;
+      background-color: rgba(255, 255, 255, 0.15);
       border-radius: 10px;
-      height: 3px;
+      height: 4px;
       width: 100%;
       position: relative;
+      overflow: hidden;
     }
     
     .progress-bar {
@@ -144,93 +173,256 @@
       top: 0;
       left: 0;
       height: 100%;
-      background-color: #4285F4;
+      background: linear-gradient(to right, var(--primary-color), var(--accent-color));
       border-radius: 10px;
-      transition: width 0.2s;
+      transition: width 0.3s ease;
     }
     
     .no-content {
-      padding: 40px;
+      padding: 48px;
       text-align: center;
-      background-color: rgba(0, 0, 0, 0.3);
-      border-radius: 10px;
-      max-width: 500px;
+      background-color: var(--bg-card);
+      border-radius: var(--radius-lg);
+      max-width: 550px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
     
     .no-content h2 {
       margin-top: 0;
-      color: #f1f1f1;
+      color: var(--text-light);
+      font-size: 24px;
+      margin-bottom: 16px;
     }
     
     .no-content p {
-      color: #aaa;
-      line-height: 1.6;
-    }
-    
-    #favorite-btn {
-      background-color: rgba(255, 193, 7, 0.2);
-      border-color: rgba(255, 193, 7, 0.4);
-    }
-    
-    #favorite-btn:hover {
-      background-color: rgba(255, 193, 7, 0.3);
-    }
-    
-    #download-btn {
-      background-color: rgba(76, 175, 80, 0.2);
-      border-color: rgba(76, 175, 80, 0.4);
-    }
-    
-    #download-btn:hover {
-      background-color: rgba(76, 175, 80, 0.3);
-    }
-    
-    #show-favorites-btn {
-      background-color: rgba(63, 81, 181, 0.2);
-      border-color: rgba(63, 81, 181, 0.4);
-    }
-    
-    #show-favorites-btn:hover {
-      background-color: rgba(63, 81, 181, 0.3);
-    }
-    
-    #download-all-favorites-btn {
-      background-color: rgba(233, 30, 99, 0.2);
-      border-color: rgba(233, 30, 99, 0.4);
-    }
-    
-    #download-all-favorites-btn:hover {
-      background-color: rgba(233, 30, 99, 0.3);
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.8;
+      font-size: 16px;
     }
     
     #status-message {
       position: absolute;
-      bottom: 70px;
-      left: 20px;
-      background-color: rgba(0, 0, 0, 0.7);
+      bottom: 85px;
+      left: 24px;
+      background-color: rgba(15, 15, 15, 0.85);
       color: white;
-      padding: 10px 15px;
-      border-radius: 5px;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
       z-index: 1000;
       opacity: 0;
-      transition: opacity 0.3s;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(8px);
+      font-weight: 500;
     }
     
     .header-group {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
     
     .controls-group {
       display: flex;
-      gap: 10px;
+      gap: 12px;
     }
     
     .favorites-controls {
-      margin-top: 10px;
-      padding-top: 10px;
+      margin-top: 12px;
+      padding-top: 12px;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Navigation buttons - moved closer to center */
+    .nav-button {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: rgba(15, 15, 15, 0.75);
+      border: none;
+      border-radius: 50%;
+      width: 56px;
+      height: 56px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 22px;
+      z-index: 100;
+      transition: var(--transition);
+      opacity: 0.7;
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(4px);
+    }
+    
+    .nav-button:hover {
+      opacity: 1;
+      background-color: var(--primary-color);
+      transform: translateY(-50%) scale(1.1);
+    }
+    
+    #prev-btn {
+      left: 400px; /* Moved closer to center */
+    }
+    
+    #next-btn {
+      right: 400px; /* Moved closer to center */
+    }
+    
+    /* Action buttons - repositioned under the next arrow */
+    .action-buttons {
+      position: absolute;
+      top: unset; /* Remove top positioning */
+      bottom: 205px; /* Position from bottom */
+      right: 341px; /* Align with next button */
+      display: flex;
+      flex-direction: row; /* Changed to horizontal layout */
+      gap: 16px;
+      z-index: 100;
+    }
+    
+    .action-button {
+      background-color: rgba(15, 15, 15, 0.75);
+      border: none;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      transition: var(--transition);
+      opacity: 0.7;
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(4px);
+    }
+    
+    .action-button:hover {
+      opacity: 1;
+      transform: scale(1.1) rotate(5deg);
+    }
+    
+    #favorite-btn {
+      color: #FFD700;
+    }
+
+    
+    #download-btn {
+      color: #4CAF50;
+    }
+    
+    #download-btn:hover {
+      background-color: rgba(76, 175, 80, 0.2);
+      box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+    }
+    
+    #random-btn {
+      color: #2196F3;
+    }
+    
+    #random-btn:hover {
+      background-color: rgba(33, 150, 243, 0.2);
+      box-shadow: 0 0 15px rgba(33, 150, 243, 0.3);
+    }
+    
+    #fullscreen-btn {
+      color: #9C27B0;
+    }
+    
+    #fullscreen-btn:hover {
+      background-color: rgba(156, 39, 176, 0.2);
+      box-shadow: 0 0 15px rgba(156, 39, 176, 0.3);
+    }
+    
+    #show-favorites-btn {
+      color: #FFD700;
+      background-color: rgba(255, 215, 0, 0.1);
+    }
+    
+    #show-favorites-btn:hover {
+      background-color: rgba(255, 215, 0, 0.2);
+    }
+    
+    #download-all-favorites-btn {
+      color: #4CAF50;
+      background-color: rgba(76, 175, 80, 0.1);
+    }
+    
+    #download-all-favorites-btn:hover {
+      background-color: rgba(76, 175, 80, 0.2);
+    }
+    
+    /* Animations */
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+    }
+    
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    /* Media Queries */
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        padding: 16px;
+      }
+      
+      .title {
+        text-align: center;
+        justify-content: center;
+      }
+      
+      .controls {
+        justify-content: center;
+      }
+      
+      .nav-button {
+        width: 48px;
+        height: 48px;
+      }
+      
+      #prev-btn {
+        left: 50px; /* Adjust for mobile */
+      }
+      
+      #next-btn {
+        right: 50px; /* Adjust for mobile */
+      }
+      
+      .action-buttons {
+        right: 50px; /* Align with next button on mobile */
+        bottom: 16px;
+      }
+      
+      .action-button {
+        width: 42px;
+        height: 42px;
+      }
+      
+      .info-panel {
+        bottom: 16px;
+        left: 16px;
+      }
+    }
+    
+    /* For very small screens */
+    @media (max-width: 480px) {
+      #prev-btn {
+        left: 20px;
+      }
+      
+      #next-btn {
+        right: 20px;
+      }
+      
+      .action-buttons {
+        right: 20px;
+      }
     }
   </style>
 </head>
@@ -239,22 +431,39 @@
     <h1 class="title">Saint Links Player</h1>
     <div class="header-group">
       <div class="controls controls-group">
-        <button id="prev-btn">Previous</button>
-        <button id="next-btn">Next</button>
-        <button id="random-btn">Random</button>
-        <button id="favorite-btn">☆ Favorite</button>
-        <button id="download-btn">Download</button>
-        <button id="fullscreen-btn">Fullscreen</button>
+        <button id="random-btn"><i class="fas fa-random"></i> Random</button>
+        <button id="fullscreen-btn"><i class="fas fa-expand"></i> Fullscreen</button>
       </div>
       <div class="controls favorites-controls">
-        <button id="show-favorites-btn">Show Favorites</button>
-        <button id="download-all-favorites-btn">Download All Favorites</button>
+        <button id="show-favorites-btn"><i class="fas fa-star"></i> Show Favorites</button>
+        <button id="download-all-favorites-btn"><i class="fas fa-download"></i> Download All Favorites</button>
       </div>
     </div>
   </div>
   
   <div class="content">
-    <div class="player-container" id="player-container"></div>
+    <div class="player-container" id="player-container">
+      <!-- Video will be loaded here -->
+    </div>
+    
+    <!-- Navigation arrows moved closer to center -->
+    <button id="prev-btn" class="nav-button">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <button id="next-btn" class="nav-button">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+    
+    <!-- Action buttons repositioned under the next arrow -->
+    <div class="action-buttons">
+      <button id="favorite-btn" class="action-button">
+        <i class="fas fa-star"></i>
+      </button>
+      <button id="download-btn" class="action-button">
+        <i class="fas fa-download"></i>
+      </button>
+    </div>
+    
     <div class="info-panel">
       <div>
         <div id="current-count">0/0</div>
@@ -264,6 +473,47 @@
       </div>
     </div>
   </div>
+  
+  <div id="status-message"></div>
+  
+  <script>
+    // JavaScript needs to be updated to handle the new button functionality
+    document.addEventListener('DOMContentLoaded', () => {
+      const player = new SaintLinksPlayer();
+      
+      // Update the favorite button to display the filled star when active
+      const originalToggleFavorite = player.toggleFavorite;
+      player.toggleFavorite = function() {
+        originalToggleFavorite.call(this);
+        
+        // Update icon class instead of text content
+        if (this.favoriteLinks.includes(this.displayedLinks[this.currentIndex])) {
+          this.favoriteButton.classList.add('active');
+          this.favoriteButton.querySelector('i').className = 'fas fa-star';
+        } else {
+          this.favoriteButton.classList.remove('active');
+          this.favoriteButton.querySelector('i').className = 'far fa-star';
+        }
+      };
+      
+      // Update the updateFavoriteButtonState method
+      const originalUpdateFavoriteButtonState = player.updateFavoriteButtonState;
+      player.updateFavoriteButtonState = function() {
+        if (!this.isLoaded || this.displayedLinks.length === 0) return;
+        
+        const currentLink = this.displayedLinks[this.currentIndex];
+        const isFavorite = this.favoriteLinks.includes(currentLink);
+        
+        if (isFavorite) {
+          this.favoriteButton.classList.add('active');
+          this.favoriteButton.querySelector('i').className = 'fas fa-star';
+        } else {
+          this.favoriteButton.classList.remove('active');
+          this.favoriteButton.querySelector('i').className = 'far fa-star';
+        }
+      };
+    });
+  </script>
   
   <script src="player.js"></script>
 </body>

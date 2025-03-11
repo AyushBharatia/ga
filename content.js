@@ -517,9 +517,13 @@ async function init(){
     });
 
     // Inject toolbar after a short delay to ensure page is loaded
-    setTimeout(() => {
-        injectToolbar();
-    }, 500);
+    const currentDomain = window.location.hostname;
+    if (currentDomain.includes('simpcity.su')) {
+        // Inject toolbar after a short delay to ensure page is loaded
+        setTimeout(() => {
+            injectToolbar();
+        }, 500);
+    }
 
     chrome.storage.local.get('autoNavigationActive', (result) => {
         if (result.autoNavigationActive) {

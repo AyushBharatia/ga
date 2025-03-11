@@ -246,11 +246,9 @@ class SaintLinksPlayer {
     
     // Update button UI based on favorite status
     if (isFavorite) {
-      this.favoriteButton.textContent = '★ Favorite';
       this.favoriteButton.style.backgroundColor = 'rgba(255, 193, 7, 0.3)';
       this.favoriteButton.style.borderColor = 'rgba(255, 193, 7, 0.6)';
     } else {
-      this.favoriteButton.textContent = '☆ Favorite';
       this.favoriteButton.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
       this.favoriteButton.style.borderColor = 'rgba(255, 255, 255, 0.3)';
     }
