@@ -132,6 +132,7 @@ class SaintLinksPlayer {
     iframe.setAttribute('allowfullscreen', 'true');
     iframe.setAttribute('scrolling', 'no');
     iframe.setAttribute('frameborder', '0');
+    iframe.setAttribute('autoplay', 'true');
     
     // Add iframe to container
     this.playerContainer.appendChild(iframe);
@@ -139,6 +140,43 @@ class SaintLinksPlayer {
     // Update UI
     this.updateProgressBar();
     this.updateFavoriteButtonState();
+    
+    // Click the middle of the screen after 2 seconds to start playback
+    setTimeout(() => {
+      this.clickMiddleOfScreen();
+    }, 2000);
+  }
+  
+  clickMiddleOfScreen() {
+    console.log('Starting clickMiddleOfScreen method');
+    
+    try {
+      const iframe = this.playerContainer.querySelector('iframe');
+      if (!iframe) {
+        console.error('No iframe found');
+        return;
+      }
+      
+      console.log('Found iframe, getting dimensions');
+      
+      // Calculate middle point
+      const iframeRect = iframe.getBoundingClientRect();
+      const centerX = Math.floor(iframe.clientWidth / 2);
+      const centerY = Math.floor(iframe.clientHeight / 2);
+      
+      console.log('Calculated center point:', centerX, centerY);
+      
+      // Send message to iframe content
+      console.log('Sending postMessage to iframe');
+      iframe.contentWindow.postMessage({
+        type: 'simulateClick',
+        x: centerX,
+        y: centerY
+      }, '*');
+      
+    } catch (error) {
+      console.error('Error in clickMiddleOfScreen:', error);
+    }
   }
   
   nextVideo() {
@@ -270,18 +308,42 @@ class SaintLinksPlayer {
       // Create a tab to open the saint embed
       const tab = await chrome.tabs.create({ url: currentLink, active: false });
       
-      // Wait a bit for the page to load
-      setTimeout(async () => {
-        // Execute a content script in the new tab to extract the video source
-        chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          function: extractAndDownloadVideo
-        });
-      }, 2000);
-      
+      // Show loading message
       this.showStatusMessage('Opening download tab...');
+      
+      // Wait for the page to load
+      setTimeout(async () => {
+        try {
+          // Execute a content script in the new tab to extract and download the video
+          const results = await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            function: extractAndDownloadVideo
+          });
+          
+          // Check if download was successful
+          const success = results && results[0] && results[0].result && results[0].result.success;
+          
+          if (success) {
+            this.showStatusMessage('Download started. Tab will close shortly...');
+            
+            // Wait a bit to allow the download to start, then close the tab
+            setTimeout(async () => {
+              try {
+                await chrome.tabs.remove(tab.id);
+              } catch (error) {
+                console.error('Error closing tab:', error);
+              }
+            }, 3000);
+          } else {
+            this.showStatusMessage('Download failed. Check console for details.');
+          }
+        } catch (error) {
+          console.error('Error executing download script:', error);
+          this.showStatusMessage('Error downloading: ' + error.message);
+        }
+      }, 2000);
     } catch (error) {
-      console.error('Error downloading video:', error);
+      console.error('Error creating download tab:', error);
       this.showStatusMessage('Error downloading: ' + error.message);
     }
   }
@@ -297,7 +359,7 @@ class SaintLinksPlayer {
     // Create a counter for successful downloads
     let successCount = 0;
     
-    // Process each favorite link
+    // Process each favorite link one by one
     for (let i = 0; i < this.favoriteLinks.length; i++) {
       try {
         // Create a tab to open the saint embed
@@ -306,8 +368,11 @@ class SaintLinksPlayer {
           active: false 
         });
         
+        // Show progress
+        this.showStatusMessage(`Processing ${i+1}/${this.favoriteLinks.length} favorites...`);
+        
         // Wait for page to load before running the script
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
         
         // Execute script to download the video
         const results = await chrome.scripting.executeScript({
@@ -316,18 +381,23 @@ class SaintLinksPlayer {
         });
         
         // Check if download was successful
-        if (results && results[0] && results[0].result && results[0].result.success) {
+        const success = results && results[0] && results[0].result && results[0].result.success;
+        
+        if (success) {
           successCount++;
+          // Wait for download to start
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
         
         // Close the tab after attempting download
-        await chrome.tabs.remove(tab.id);
+        try {
+          await chrome.tabs.remove(tab.id);
+        } catch (error) {
+          console.error('Error closing tab:', error);
+        }
         
-        // Show progress
-        this.showStatusMessage(`Downloaded ${i+1}/${this.favoriteLinks.length} favorites...`);
-        
-        // Add a small delay between downloads to prevent overwhelming the browser
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Add a delay between downloads to prevent overwhelming the browser
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
       } catch (error) {
         console.error(`Error downloading favorite ${i+1}:`, error);
@@ -460,21 +530,51 @@ class SaintLinksPlayer {
 
 // This function will be injected as a content script in the saint page
 function extractAndDownloadVideo() {
-  const videoElement = document.querySelector('#main-video');
-  if (videoElement && videoElement.querySelector('source')) {
-    const videoSrc = videoElement.querySelector('source').src;
-    if (videoSrc) {
-      // Create a link and click it to download
-      const a = document.createElement('a');
-      a.href = videoSrc;
-      a.download = videoSrc.split('/').pop() || 'saint-video.mp4';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      return { success: true, message: 'Video download started' };
+  try {
+    // Make sure the page is fully loaded
+    if (document.readyState !== 'complete') {
+      return { success: false, message: 'Page not fully loaded yet' };
     }
+    
+    // Find the video element
+    const videoElement = document.querySelector('#main-video');
+    if (!videoElement) {
+      return { success: false, message: 'Video element not found on page' };
+    }
+    
+    // Find the video source
+    const sourceElement = videoElement.querySelector('source');
+    if (!sourceElement) {
+      return { success: false, message: 'Video source element not found' };
+    }
+    
+    // Get the video URL
+    const videoSrc = sourceElement.src;
+    if (!videoSrc) {
+      return { success: false, message: 'Video source URL not found' };
+    }
+    
+    // Create a friendly filename from the URL
+    let filename = videoSrc.split('/').pop() || 'saint-video.mp4';
+    
+    // Create a link and click it to download
+    const a = document.createElement('a');
+    a.href = videoSrc;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up
+    setTimeout(() => {
+      document.body.removeChild(a);
+    }, 100);
+    
+    return { success: true, message: 'Video download started' };
+  } catch (error) {
+    console.error('Error in extractAndDownloadVideo:', error);
+    return { success: false, message: `Download error: ${error.message}` };
   }
-  return { success: false, message: 'Could not find video source' };
 }
 
 // Initialize the player when the page loads

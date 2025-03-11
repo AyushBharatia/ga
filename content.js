@@ -1,4 +1,4 @@
-// content.js
+// Integrated content script
 'use strict';
 
 let isInitialized = false;
@@ -204,6 +204,13 @@ function injectToolbar() {
             #link-collector-toolbar #open-player-btn:hover {
                 background-color: rgba(255, 152, 0, 0.3);
             }
+            #link-collector-toolbar #autoplay-videos-btn {
+                background-color: rgba(0, 188, 212, 0.2);
+                border-color: rgba(0, 188, 212, 0.4);
+            }
+            #link-collector-toolbar #autoplay-videos-btn:hover {
+                background-color: rgba(0, 188, 212, 0.3);
+            }
         </style>
         <div class="main-section">
             <div class="toolbar-title">Link Collector</div>
@@ -214,6 +221,7 @@ function injectToolbar() {
                 <button id="clear-links-btn">Clear All</button>
                 <button id="download-links-btn">Download</button>
                 <button id="open-player-btn">Open Player</button>
+                <button id="autoplay-videos-btn">Autoplay Videos</button>
                 <span class="status-message" id="status-message"></span>
             </div>
         </div>
@@ -263,6 +271,11 @@ function injectToolbar() {
             action: 'openPlayer'
         });
         showStatusMessage('Opening media player...');
+    });
+    
+    document.getElementById('autoplay-videos-btn').addEventListener('click', () => {
+        tryPlayAllVideos();
+        showStatusMessage('Attempting to play all videos...');
     });
     
     document.getElementById('toggle-toolbar').addEventListener('click', () => {
@@ -439,7 +452,65 @@ function convertRedgifsUrl(url) {
     return match && match[1] ? `https://redgifs.com/watch/${match[1]}` : url;
 }
 
+// Video autoplay functionality
+function tryPlayAllVideos() {
+    console.log('Attempting to play all videos on the page');
+    
+    const videoElements = document.querySelectorAll('video');
+    console.log('Video elements found:', videoElements.length);
+    
+    let playedCount = 0;
+    
+    videoElements.forEach(video => {
+        console.log('Found video:', video);
+        if (video.paused) {
+            console.log('Attempting to play paused video');
+            video.play().then(() => {
+                playedCount++;
+                console.log('Successfully played video');
+            }).catch(e => {
+                console.error('Error playing video:', e);
+            });
+        } else {
+            playedCount++;
+        }
+    });
+    
+    // Also try clicking on common play button elements
+    const playButtons = document.querySelectorAll('.play-button, .ytp-play-button, [aria-label="Play"]');
+    console.log('Play buttons found:', playButtons.length);
+    
+    playButtons.forEach(button => {
+        console.log('Clicking play button:', button);
+        button.click();
+    });
+    
+    showStatusMessage(`Found ${videoElements.length} videos and ${playButtons.length} play buttons`);
+}
+
+function simulateClick(x, y) {
+    console.log('Attempting to simulate click at:', x, y);
+    
+    const clickEvent = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX: x,
+        clientY: y
+    });
+    
+    const elementAtPoint = document.elementFromPoint(x, y);
+    if (elementAtPoint) {
+        console.log('Found element at point:', elementAtPoint);
+        elementAtPoint.dispatchEvent(clickEvent);
+    } else {
+        console.log('No element found at the specified coordinates');
+    }
+}
+
 async function init(){
+    console.log('Content script running in frame:', window.location.href);
+    
     await loadSavedLinks();
     chrome.storage.local.get('delay', (result) => {
         if (result.delay) config.delay = parseInt(result.delay);
@@ -458,11 +529,30 @@ async function init(){
             }, 1000);
         }
     });
+    
+    // Set up message listener for video autoplay functionality
+    window.addEventListener('message', function(event) {
+        console.log('Message received in content script:', event.data);
+        
+        if (event.data && event.data.type === 'simulateClick') {
+            simulateClick(event.data.x, event.data.y);
+            
+            // Also try video autoplay
+            tryPlayAllVideos();
+        }
+    });
+    
+    // Autoplay videos when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded in frame, looking for videos to autoplay');
+        tryPlayAllVideos();
+    });
 
     isInitialized = true;
     chrome.runtime.sendMessage({ action: 'contentScriptReady' });
 }
 
+// Message handler for extension communication
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'ping') {
         sendResponse({ pong: true });
@@ -496,9 +586,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             redgifsLinks: collectedLinks.redgifsLinks.length,
             totalLinks: collectedLinks.saintLinks.length + collectedLinks.fileLinks.length + collectedLinks.redgifsLinks.length
         });
+    } else if (request.action === 'tryPlayVideos') {
+        tryPlayAllVideos();
+        sendResponse({ success: true, message: 'Attempting to play videos' });
+    } else if (request.action === 'simulateClick' && request.x !== undefined && request.y !== undefined) {
+        simulateClick(request.x, request.y);
+        sendResponse({ success: true, message: 'Click simulated' });
     }
     return true;
-    
 });
 
 init();
