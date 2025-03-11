@@ -3,6 +3,7 @@
 class SaintLinksPlayer {
   constructor() {
     this.links = [];
+    this.favoriteLinks = [];
     this.currentIndex = 0;
     this.isLoaded = false;
     
@@ -11,6 +12,8 @@ class SaintLinksPlayer {
     this.nextButton = document.getElementById('next-btn');
     this.prevButton = document.getElementById('prev-btn');
     this.randomButton = document.getElementById('random-btn');
+    this.favoriteButton = document.getElementById('favorite-btn');
+    this.downloadButton = document.getElementById('download-btn');
     this.fullscreenButton = document.getElementById('fullscreen-btn');
     this.currentCountElement = document.getElementById('current-count');
     this.progressBar = document.getElementById('progress-bar');
@@ -18,12 +21,15 @@ class SaintLinksPlayer {
     // Initialize
     this.setupEventListeners();
     this.loadLinks();
+    this.loadFavorites();
   }
   
   setupEventListeners() {
     this.nextButton.addEventListener('click', () => this.nextVideo());
     this.prevButton.addEventListener('click', () => this.prevVideo());
     this.randomButton.addEventListener('click', () => this.randomVideo());
+    this.favoriteButton.addEventListener('click', () => this.toggleFavorite());
+    this.downloadButton.addEventListener('click', () => this.downloadVideo());
     this.fullscreenButton.addEventListener('click', () => this.toggleFullscreen());
     
     // Keyboard shortcuts
@@ -42,6 +48,14 @@ class SaintLinksPlayer {
         case 'f':
         case 'F':
           this.toggleFullscreen();
+          break;
+        case 'd':
+        case 'D':
+          this.downloadVideo();
+          break;
+        case 's':
+        case 'S':
+          this.toggleFavorite();
           break;
       }
     });
@@ -64,6 +78,18 @@ class SaintLinksPlayer {
     } catch (error) {
       console.error('Error loading links:', error);
       this.showErrorMessage(error);
+    }
+  }
+  
+  async loadFavorites() {
+    // Get favorite links from Chrome storage
+    try {
+      const result = await this.getFromStorage(['favoriteLinks']);
+      this.favoriteLinks = result.favoriteLinks || [];
+      this.updateFavoriteButtonState();
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+      this.favoriteLinks = [];
     }
   }
   
@@ -96,6 +122,7 @@ class SaintLinksPlayer {
     
     // Update UI
     this.updateProgressBar();
+    this.updateFavoriteButtonState();
   }
   
   nextVideo() {
@@ -116,6 +143,100 @@ class SaintLinksPlayer {
     } while (randomIndex === this.currentIndex && this.links.length > 1);
     
     this.loadVideo(randomIndex);
+  }
+  
+  toggleFavorite() {
+    if (!this.isLoaded || this.links.length === 0) return;
+    
+    const currentLink = this.links[this.currentIndex];
+    const isFavorite = this.favoriteLinks.includes(currentLink);
+    
+    if (isFavorite) {
+      // Remove from favorites
+      this.favoriteLinks = this.favoriteLinks.filter(link => link !== currentLink);
+      this.showStatusMessage('Removed from favorites');
+    } else {
+      // Add to favorites
+      this.favoriteLinks.push(currentLink);
+      this.showStatusMessage('Added to favorites');
+    }
+    
+    // Save to storage
+    chrome.storage.local.set({ favoriteLinks: this.favoriteLinks });
+    
+    // Update button state
+    this.updateFavoriteButtonState();
+  }
+  
+  updateFavoriteButtonState() {
+    if (!this.isLoaded || this.links.length === 0) return;
+    
+    const currentLink = this.links[this.currentIndex];
+    const isFavorite = this.favoriteLinks.includes(currentLink);
+    
+    // Update button UI based on favorite status
+    if (isFavorite) {
+      this.favoriteButton.textContent = '★ Favorite';
+      this.favoriteButton.style.backgroundColor = 'rgba(255, 193, 7, 0.3)';
+      this.favoriteButton.style.borderColor = 'rgba(255, 193, 7, 0.6)';
+    } else {
+      this.favoriteButton.textContent = '☆ Favorite';
+      this.favoriteButton.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+      this.favoriteButton.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+    }
+  }
+  
+  async downloadVideo() {
+    if (!this.isLoaded || this.links.length === 0) return;
+    
+    const currentLink = this.links[this.currentIndex];
+    
+    try {
+      // Create a tab to open the saint embed
+      const tab = await chrome.tabs.create({ url: currentLink, active: false });
+      
+      // Wait a bit for the page to load
+      setTimeout(async () => {
+        // Execute a content script in the new tab to extract the video source
+        chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          function: extractAndDownloadVideo
+        });
+      }, 2000);
+      
+      this.showStatusMessage('Opening download tab...');
+    } catch (error) {
+      console.error('Error downloading video:', error);
+      this.showStatusMessage('Error downloading: ' + error.message);
+    }
+  }
+  
+  showStatusMessage(message) {
+    // Create status message element if it doesn't exist
+    let statusElement = document.getElementById('status-message');
+    if (!statusElement) {
+      statusElement = document.createElement('div');
+      statusElement.id = 'status-message';
+      statusElement.style.position = 'absolute';
+      statusElement.style.bottom = '70px';
+      statusElement.style.left = '20px';
+      statusElement.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+      statusElement.style.color = 'white';
+      statusElement.style.padding = '10px 15px';
+      statusElement.style.borderRadius = '5px';
+      statusElement.style.zIndex = '1000';
+      statusElement.style.transition = 'opacity 0.3s';
+      document.body.appendChild(statusElement);
+    }
+    
+    // Display message
+    statusElement.textContent = message;
+    statusElement.style.opacity = '1';
+    
+    // Hide message after 3 seconds
+    setTimeout(() => {
+      statusElement.style.opacity = '0';
+    }, 3000);
   }
   
   toggleFullscreen() {
@@ -182,8 +303,29 @@ class SaintLinksPlayer {
     this.nextButton.disabled = true;
     this.prevButton.disabled = true;
     this.randomButton.disabled = true;
+    this.favoriteButton.disabled = true;
+    this.downloadButton.disabled = true;
     this.fullscreenButton.disabled = true;
   }
+}
+
+// This function will be injected as a content script in the saint page
+function extractAndDownloadVideo() {
+  const videoElement = document.querySelector('#main-video');
+  if (videoElement && videoElement.querySelector('source')) {
+    const videoSrc = videoElement.querySelector('source').src;
+    if (videoSrc) {
+      // Create a link and click it to download
+      const a = document.createElement('a');
+      a.href = videoSrc;
+      a.download = videoSrc.split('/').pop() || 'saint-video.mp4';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return { success: true, message: 'Video download started' };
+    }
+  }
+  return { success: false, message: 'Could not find video source' };
 }
 
 // Initialize the player when the page loads
