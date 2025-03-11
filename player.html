@@ -36,6 +36,7 @@
     .controls {
       display: flex;
       gap: 10px;
+      flex-wrap: wrap;
     }
     
     button {
@@ -61,6 +62,13 @@
     
     button:active {
       transform: translateY(0);
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
     }
     
     #next-btn {
@@ -158,48 +166,90 @@
       color: #aaa;
       line-height: 1.6;
     }
+    
     #favorite-btn {
-  background-color: rgba(255, 193, 7, 0.2);
-  border-color: rgba(255, 193, 7, 0.4);
-}
-
-#favorite-btn:hover {
-  background-color: rgba(255, 193, 7, 0.3);
-}
-
-#download-btn {
-  background-color: rgba(76, 175, 80, 0.2);
-  border-color: rgba(76, 175, 80, 0.4);
-}
-
-#download-btn:hover {
-  background-color: rgba(76, 175, 80, 0.3);
-}
-
-#status-message {
-  position: absolute;
-  bottom: 70px;
-  left: 20px;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 10px 15px;
-  border-radius: 5px;
-  z-index: 1000;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
+      background-color: rgba(255, 193, 7, 0.2);
+      border-color: rgba(255, 193, 7, 0.4);
+    }
+    
+    #favorite-btn:hover {
+      background-color: rgba(255, 193, 7, 0.3);
+    }
+    
+    #download-btn {
+      background-color: rgba(76, 175, 80, 0.2);
+      border-color: rgba(76, 175, 80, 0.4);
+    }
+    
+    #download-btn:hover {
+      background-color: rgba(76, 175, 80, 0.3);
+    }
+    
+    #show-favorites-btn {
+      background-color: rgba(63, 81, 181, 0.2);
+      border-color: rgba(63, 81, 181, 0.4);
+    }
+    
+    #show-favorites-btn:hover {
+      background-color: rgba(63, 81, 181, 0.3);
+    }
+    
+    #download-all-favorites-btn {
+      background-color: rgba(233, 30, 99, 0.2);
+      border-color: rgba(233, 30, 99, 0.4);
+    }
+    
+    #download-all-favorites-btn:hover {
+      background-color: rgba(233, 30, 99, 0.3);
+    }
+    
+    #status-message {
+      position: absolute;
+      bottom: 70px;
+      left: 20px;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .header-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .controls-group {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .favorites-controls {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
   </style>
 </head>
 <body>
   <div class="header">
     <h1 class="title">Saint Links Player</h1>
-    <div class="controls">
-      <button id="prev-btn">Previous</button>
-      <button id="next-btn">Next</button>
-      <button id="random-btn">Random</button>
-      <button id="favorite-btn">Favorite</button>
-      <button id="download-btn">Download</button>
-      <button id="fullscreen-btn">Fullscreen</button>
+    <div class="header-group">
+      <div class="controls controls-group">
+        <button id="prev-btn">Previous</button>
+        <button id="next-btn">Next</button>
+        <button id="random-btn">Random</button>
+        <button id="favorite-btn">☆ Favorite</button>
+        <button id="download-btn">Download</button>
+        <button id="fullscreen-btn">Fullscreen</button>
+      </div>
+      <div class="controls favorites-controls">
+        <button id="show-favorites-btn">Show Favorites</button>
+        <button id="download-all-favorites-btn">Download All Favorites</button>
+      </div>
     </div>
   </div>
   

@@ -6,6 +6,8 @@ class SaintLinksPlayer {
     this.favoriteLinks = [];
     this.currentIndex = 0;
     this.isLoaded = false;
+    this.showingFavorites = false;
+    this.displayedLinks = []; // This will hold either all links or just favorites
     
     // DOM elements
     this.playerContainer = document.getElementById('player-container');
@@ -17,6 +19,10 @@ class SaintLinksPlayer {
     this.fullscreenButton = document.getElementById('fullscreen-btn');
     this.currentCountElement = document.getElementById('current-count');
     this.progressBar = document.getElementById('progress-bar');
+    
+    // Add new buttons for favorites features
+    this.showFavoritesButton = document.getElementById('show-favorites-btn');
+    this.downloadAllFavoritesButton = document.getElementById('download-all-favorites-btn');
     
     // Initialize
     this.setupEventListeners();
@@ -31,6 +37,8 @@ class SaintLinksPlayer {
     this.favoriteButton.addEventListener('click', () => this.toggleFavorite());
     this.downloadButton.addEventListener('click', () => this.downloadVideo());
     this.fullscreenButton.addEventListener('click', () => this.toggleFullscreen());
+    this.showFavoritesButton.addEventListener('click', () => this.toggleFavoritesView());
+    this.downloadAllFavoritesButton.addEventListener('click', () => this.downloadAllFavorites());
     
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
@@ -57,6 +65,10 @@ class SaintLinksPlayer {
         case 'S':
           this.toggleFavorite();
           break;
+        case 'v':
+        case 'V':
+          this.toggleFavoritesView();
+          break;
       }
     });
   }
@@ -66,6 +78,9 @@ class SaintLinksPlayer {
     try {
       const result = await this.getFromStorage(['saintLinks']);
       this.links = result.saintLinks || [];
+      
+      // Initialize displayed links to all links
+      this.displayedLinks = [...this.links];
       
       // Update UI based on links
       if (this.links.length > 0) {
@@ -87,6 +102,7 @@ class SaintLinksPlayer {
       const result = await this.getFromStorage(['favoriteLinks']);
       this.favoriteLinks = result.favoriteLinks || [];
       this.updateFavoriteButtonState();
+      this.updateFavoritesButtonState();
     } catch (error) {
       console.error('Error loading favorites:', error);
       this.favoriteLinks = [];
@@ -102,7 +118,7 @@ class SaintLinksPlayer {
   }
   
   loadVideo(index) {
-    if (!this.isLoaded || this.links.length === 0) return;
+    if (!this.isLoaded || this.displayedLinks.length === 0) return;
     
     // Ensure index is within bounds
     this.currentIndex = this.normalizeIndex(index);
@@ -112,7 +128,7 @@ class SaintLinksPlayer {
     
     // Create iframe for the current link
     const iframe = document.createElement('iframe');
-    iframe.src = this.links[this.currentIndex];
+    iframe.src = this.displayedLinks[this.currentIndex];
     iframe.setAttribute('allowfullscreen', 'true');
     iframe.setAttribute('scrolling', 'no');
     iframe.setAttribute('frameborder', '0');
@@ -134,27 +150,42 @@ class SaintLinksPlayer {
   }
   
   randomVideo() {
-    if (!this.isLoaded || this.links.length === 0) return;
+    if (!this.isLoaded || this.displayedLinks.length === 0) return;
     
     // Generate a random index different from the current one
     let randomIndex;
     do {
-      randomIndex = Math.floor(Math.random() * this.links.length);
-    } while (randomIndex === this.currentIndex && this.links.length > 1);
+      randomIndex = Math.floor(Math.random() * this.displayedLinks.length);
+    } while (randomIndex === this.currentIndex && this.displayedLinks.length > 1);
     
     this.loadVideo(randomIndex);
   }
   
   toggleFavorite() {
-    if (!this.isLoaded || this.links.length === 0) return;
+    if (!this.isLoaded || this.displayedLinks.length === 0) return;
     
-    const currentLink = this.links[this.currentIndex];
+    const currentLink = this.displayedLinks[this.currentIndex];
     const isFavorite = this.favoriteLinks.includes(currentLink);
     
     if (isFavorite) {
       // Remove from favorites
       this.favoriteLinks = this.favoriteLinks.filter(link => link !== currentLink);
       this.showStatusMessage('Removed from favorites');
+      
+      // If showing only favorites, we might need to remove this item from display
+      if (this.showingFavorites) {
+        this.displayedLinks = [...this.favoriteLinks];
+        if (this.displayedLinks.length === 0) {
+          this.showNoFavoritesMessage();
+          return;
+        } else {
+          // Adjust current index if necessary
+          if (this.currentIndex >= this.displayedLinks.length) {
+            this.currentIndex = this.displayedLinks.length - 1;
+          }
+          this.loadVideo(this.currentIndex);
+        }
+      }
     } else {
       // Add to favorites
       this.favoriteLinks.push(currentLink);
@@ -164,14 +195,15 @@ class SaintLinksPlayer {
     // Save to storage
     chrome.storage.local.set({ favoriteLinks: this.favoriteLinks });
     
-    // Update button state
+    // Update button states
     this.updateFavoriteButtonState();
+    this.updateFavoritesButtonState();
   }
   
   updateFavoriteButtonState() {
-    if (!this.isLoaded || this.links.length === 0) return;
+    if (!this.isLoaded || this.displayedLinks.length === 0) return;
     
-    const currentLink = this.links[this.currentIndex];
+    const currentLink = this.displayedLinks[this.currentIndex];
     const isFavorite = this.favoriteLinks.includes(currentLink);
     
     // Update button UI based on favorite status
@@ -186,10 +218,53 @@ class SaintLinksPlayer {
     }
   }
   
-  async downloadVideo() {
-    if (!this.isLoaded || this.links.length === 0) return;
+  toggleFavoritesView() {
+    if (!this.isLoaded) return;
     
-    const currentLink = this.links[this.currentIndex];
+    this.showingFavorites = !this.showingFavorites;
+    
+    if (this.showingFavorites) {
+      // Show only favorites
+      this.displayedLinks = [...this.favoriteLinks];
+      this.showFavoritesButton.textContent = 'Show All';
+      this.showFavoritesButton.style.backgroundColor = 'rgba(233, 30, 99, 0.3)';
+      this.showFavoritesButton.style.borderColor = 'rgba(233, 30, 99, 0.6)';
+      
+      this.showStatusMessage('Showing favorites only');
+      
+      if (this.displayedLinks.length === 0) {
+        this.showNoFavoritesMessage();
+        return;
+      }
+    } else {
+      // Show all links
+      this.displayedLinks = [...this.links];
+      this.showFavoritesButton.textContent = 'Show Favorites';
+      this.showFavoritesButton.style.backgroundColor = 'rgba(63, 81, 181, 0.2)';
+      this.showFavoritesButton.style.borderColor = 'rgba(63, 81, 181, 0.4)';
+      
+      this.showStatusMessage('Showing all videos');
+    }
+    
+    // Reset to first video in the current view
+    this.loadVideo(0);
+  }
+  
+  updateFavoritesButtonState() {
+    // Enable/disable download all favorites button based on if any favorites exist
+    if (this.favoriteLinks.length > 0) {
+      this.downloadAllFavoritesButton.disabled = false;
+      this.downloadAllFavoritesButton.style.opacity = '1';
+    } else {
+      this.downloadAllFavoritesButton.disabled = true;
+      this.downloadAllFavoritesButton.style.opacity = '0.5';
+    }
+  }
+  
+  async downloadVideo() {
+    if (!this.isLoaded || this.displayedLinks.length === 0) return;
+    
+    const currentLink = this.displayedLinks[this.currentIndex];
     
     try {
       // Create a tab to open the saint embed
@@ -209,6 +284,58 @@ class SaintLinksPlayer {
       console.error('Error downloading video:', error);
       this.showStatusMessage('Error downloading: ' + error.message);
     }
+  }
+  
+  async downloadAllFavorites() {
+    if (this.favoriteLinks.length === 0) {
+      this.showStatusMessage('No favorites to download');
+      return;
+    }
+    
+    this.showStatusMessage(`Starting download of ${this.favoriteLinks.length} favorites...`);
+    
+    // Create a counter for successful downloads
+    let successCount = 0;
+    
+    // Process each favorite link
+    for (let i = 0; i < this.favoriteLinks.length; i++) {
+      try {
+        // Create a tab to open the saint embed
+        const tab = await chrome.tabs.create({ 
+          url: this.favoriteLinks[i], 
+          active: false 
+        });
+        
+        // Wait for page to load before running the script
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Execute script to download the video
+        const results = await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          function: extractAndDownloadVideo
+        });
+        
+        // Check if download was successful
+        if (results && results[0] && results[0].result && results[0].result.success) {
+          successCount++;
+        }
+        
+        // Close the tab after attempting download
+        await chrome.tabs.remove(tab.id);
+        
+        // Show progress
+        this.showStatusMessage(`Downloaded ${i+1}/${this.favoriteLinks.length} favorites...`);
+        
+        // Add a small delay between downloads to prevent overwhelming the browser
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+      } catch (error) {
+        console.error(`Error downloading favorite ${i+1}:`, error);
+      }
+    }
+    
+    // Show final status
+    this.showStatusMessage(`Completed download of ${successCount}/${this.favoriteLinks.length} favorites`);
   }
   
   showStatusMessage(message) {
@@ -263,8 +390,8 @@ class SaintLinksPlayer {
   
   normalizeIndex(index) {
     if (index < 0) {
-      return this.links.length - 1;
-    } else if (index >= this.links.length) {
+      return this.displayedLinks.length - 1;
+    } else if (index >= this.displayedLinks.length) {
       return 0;
     }
     return index;
@@ -272,10 +399,10 @@ class SaintLinksPlayer {
   
   updateProgressBar() {
     // Update counter
-    this.currentCountElement.textContent = `${this.currentIndex + 1}/${this.links.length}`;
+    this.currentCountElement.textContent = `${this.currentIndex + 1}/${this.displayedLinks.length}`;
     
     // Update progress bar
-    const progressPercentage = ((this.currentIndex + 1) / this.links.length) * 100;
+    const progressPercentage = ((this.currentIndex + 1) / this.displayedLinks.length) * 100;
     this.progressBar.style.width = `${progressPercentage}%`;
   }
   
@@ -287,6 +414,26 @@ class SaintLinksPlayer {
       </div>
     `;
     this.disableControls();
+  }
+  
+  showNoFavoritesMessage() {
+    this.playerContainer.innerHTML = `
+      <div class="no-content">
+        <h2>No Favorites Found</h2>
+        <p>You haven't added any videos to your favorites yet. Browse videos and click the ☆ Favorite button to add videos to your favorites.</p>
+      </div>
+    `;
+    
+    // Disable only some controls
+    this.nextButton.disabled = true;
+    this.prevButton.disabled = true;
+    this.randomButton.disabled = true;
+    this.favoriteButton.disabled = true;
+    this.downloadButton.disabled = true;
+    this.fullscreenButton.disabled = true;
+    
+    // But keep favorites toggle enabled
+    this.showFavoritesButton.disabled = false;
   }
   
   showErrorMessage(error) {
@@ -306,6 +453,8 @@ class SaintLinksPlayer {
     this.favoriteButton.disabled = true;
     this.downloadButton.disabled = true;
     this.fullscreenButton.disabled = true;
+    this.showFavoritesButton.disabled = true;
+    this.downloadAllFavoritesButton.disabled = true;
   }
 }
 
