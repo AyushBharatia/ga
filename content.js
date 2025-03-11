@@ -197,6 +197,13 @@ function injectToolbar() {
                 transform: translateY(0);
                 transition: transform 0.3s ease;
             }
+            #link-collector-toolbar #open-player-btn {
+                background-color: rgba(255, 152, 0, 0.2);
+                border-color: rgba(255, 152, 0, 0.4);
+            }
+            #link-collector-toolbar #open-player-btn:hover {
+                background-color: rgba(255, 152, 0, 0.3);
+            }
         </style>
         <div class="main-section">
             <div class="toolbar-title">Link Collector</div>
@@ -206,6 +213,7 @@ function injectToolbar() {
                 <button id="stop-navigation-btn">Stop Nav</button>
                 <button id="clear-links-btn">Clear All</button>
                 <button id="download-links-btn">Download</button>
+                <button id="open-player-btn">Open Player</button>
                 <span class="status-message" id="status-message"></span>
             </div>
         </div>
@@ -248,6 +256,13 @@ function injectToolbar() {
     document.getElementById('download-links-btn').addEventListener('click', () => {
         downloadLinks();
         showStatusMessage('Downloading links...');
+    });
+
+    document.getElementById('open-player-btn').addEventListener('click', () => {
+        chrome.runtime.sendMessage({
+            action: 'openPlayer'
+        });
+        showStatusMessage('Opening media player...');
     });
     
     document.getElementById('toggle-toolbar').addEventListener('click', () => {
@@ -483,6 +498,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         });
     }
     return true;
+    
 });
 
 init();

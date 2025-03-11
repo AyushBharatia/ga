@@ -1,34 +1,40 @@
 {
-    "manifest_version": 3,
-    "name": "Link Collector",
-    "version": "1.0",
-    "description": "Collects links from a specific website",
-    "permissions": [
-      "storage",
-      "activeTab",
-      "scripting",
-      "downloads"
-    ],
-    "host_permissions": [
-      "*://simpcity.su/*" 
-    ],
-    "action": {
-      "default_popup": "popup.html",
-      "default_icon": {
-        "48": "icon48.png"
-      }
-    },
-    "background": {
-      "service_worker": "background.js"
-    },
-    "content_scripts": [
-      {
-        "matches": ["*://simpcity.su/*"],  
-        "js": ["content.js"],
-        "run_at": "document_end"
-      }
-    ],
-    "icons": {
+  "manifest_version": 3,
+  "name": "Link Collector",
+  "version": "1.0",
+  "description": "Collects links from a specific website",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "downloads"
+  ],
+  "host_permissions": [
+    "*://simpcity.su/*" 
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
       "48": "icon48.png"
     }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://simpcity.su/*"],  
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["player.html", "player.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "icons": {
+    "48": "icon48.png"
   }
+}

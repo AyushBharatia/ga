@@ -11,6 +11,14 @@ chrome.runtime.onInstalled.addListener(() => {
     delay: 3000
   });
   console.log("Extension installed and initialized");
+  
+  // Create player.html page in the extension
+  chrome.scripting.registerContentScripts([{
+    id: "saint-player-script",
+    matches: ["chrome-extension://*/player.html"],
+    js: ["player.js"],
+    runAt: "document_end"
+  }]);
 });
 
 // Listen for messages from content script and popup
@@ -47,6 +55,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
     });
     
+    sendResponse({success: true});
+    return true;
+  }
+  
+  if (request.action === 'openPlayer') {
+    chrome.tabs.create({
+      url: chrome.runtime.getURL('player.html')
+    });
     sendResponse({success: true});
     return true;
   }
