@@ -80,3 +80,35 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
   sendResponse({error: "External messaging not supported"});
   return true;
 });
+
+// Background script for the extension
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'openBunkrPlayer') {
+      // Create and open the player in a new tab
+      chrome.tabs.create({ url: 'bunkr-player.html' }, (tab) => {
+          console.log('Opened player in new tab:', tab.id);
+      });
+      return true;
+  } else if (request.action === 'downloadLinks') {
+      // Handle download request
+      chrome.downloads.download({
+          url: request.data.url,
+          filename: request.data.filename,
+          saveAs: false
+      });
+      return true;
+  } else if (request.action === 'updateStats') {
+      // Update badge with total links
+      const total = request.stats.saintLinks + request.stats.fileLinks + request.stats.redgifsLinks;
+      chrome.action.setBadgeText({ text: total.toString() });
+      return true;
+  }
+});
+
+// Handle installation or update
+chrome.runtime.onInstalled.addListener(() => {
+  console.log('Extension installed or updated');
+  
+  // Set default badge background
+  chrome.action.setBadgeBackgroundColor({ color: '#4e4376' });
+});

@@ -221,6 +221,7 @@ function injectToolbar() {
                 <button id="clear-links-btn">Clear All</button>
                 <button id="download-links-btn">Download</button>
                 <button id="open-player-btn">Open Player</button>
+                 <button id="open-bunkr-player-btn">Bunkr Player</button>
                 <button id="autoplay-videos-btn">Autoplay Videos</button>
                 <span class="status-message" id="status-message"></span>
             </div>
@@ -291,6 +292,13 @@ function injectToolbar() {
             toggleBtn.textContent = 'Show Toolbar';
             document.body.style.marginTop = '30px';
         }
+    });
+
+    document.getElementById('open-bunkr-player-btn').addEventListener('click', () => {
+        chrome.runtime.sendMessage({
+            action: 'openBunkrPlayer'
+        });
+        showStatusMessage('Opening media player...');
     });
 
     // Update stats immediately
